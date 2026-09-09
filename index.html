@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VitalLink — Global Smart Blood Network</title>
+  
+  <!-- Modern Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- MapLibre GL JS Cartographic Engine (Native, No External SDK) -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
+  <!-- Three.js (for optional 3D WebGL view) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <!-- Custom Modular Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+
+  <!-- Top Command Header with Role Switcher & Auth Profile -->
+  <header role="banner">
+    <div class="brand" onclick="switchPortal('ops')" role="button" tabindex="0" aria-label="VitalLink Home — Switch to Live Operations">
+      <div class="logo-container">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
+      </div>
+      <div class="brand-text-wrap">
+        <span class="brand-text">VitalLink</span>
+        <span class="brand-sub">Global Blood Network</span>
+      </div>
+      <div class="network-status-badge" title="Worldwide Cartographic & Dispatch Grid Online">
+        <span class="status-dot-pulse"></span>
+        <span>Global Grid Active</span>
+      </div>
+    </div>
+
+    <!-- Universal Global Search Bar -->
+    <div class="global-search-container" role="search">
+      <div class="global-search-input-wrap">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="search-icon" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="globalSearchInput" placeholder="Search cities, facilities, blood groups (e.g. AIIMS Delhi, London, Mumbai O-, Tokyo)..." oninput="handleGlobalSearchInput(this.value)" autocomplete="off" aria-label="Global Healthcare Directory Search">
+        <button class="search-clear-btn" id="globalSearchClearBtn" onclick="clearGlobalSearch()" aria-label="Clear Search" style="display: none;">&times;</button>
+      </div>
+      <div class="global-search-dropdown" id="globalSearchDropdown" style="display: none;" role="listbox"></div>
+    </div>
+
+    <!-- Role Switcher -->
+    <nav class="portal-switcher" role="tablist" aria-label="Platform Views">
+      <button class="portal-btn active" id="btn-portal-ops" role="tab" aria-selected="true" aria-controls="view-ops" onclick="switchPortal('ops')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"></circle><line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2" fill="none"></path></svg>
+        <span>Live Operations</span>
+      </button>
+      <button class="portal-btn" id="btn-portal-admin" role="tab" aria-selected="false" aria-controls="view-admin" onclick="handleAdminPortalClick()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" fill="none"></path></svg>
+        <span>Platform Owner</span>
+      </button>
+      <button class="portal-btn" id="btn-portal-donor" role="tab" aria-selected="false" aria-controls="view-donor" onclick="handleDonorPortalClick()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" stroke="currentColor" stroke-width="2" fill="none"></path></svg>
+        <span>Citizen Portal</span>
+      </button>
+    </nav>
+
+    <!-- Actions & Auth Profile -->
+    <div class="header-actions">
+      <button class="btn-sos" id="triggerSosBtn" onclick="simulateEmergency()" aria-label="Trigger Critical Emergency SOS Alert">
+        <span class="beacon-dot"></span>
+        <span>Emergency SOS</span>
+      </button>
+
+      <button class="btn-icon" id="soundBtn" onclick="toggleSound()" title="Toggle Synth Audio Feedback" aria-label="Toggle Sound Feedback">
+        🔊
+      </button>
+
+      <!-- Platform Owner Active Pill -->
+      <div class="auth-badge admin-active" id="adminSessionPill" style="display: none;" onclick="adminLogout()" title="Click to Logout Platform Owner" role="button" tabindex="0">
+        <div class="user-avatar owner">DD</div>
+        <span>Dhritishman Das (Owner)</span>
+        <span style="font-size: 0.65rem; color: var(--color-danger); margin-left: 2px;">✖ Exit</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Worldwide Geographic Scope Navigation Bar -->
+  <div class="geo-scope-bar" role="navigation" aria-label="Geographic Scope Selector">
+    <div class="scope-scroll-wrap">
+      <div class="scope-selector-group" role="group" aria-label="Quick Regional Jumps">
+        <button class="scope-pill-btn" data-scope="world" onclick="setGeographicScope('world')">🌍 World</button>
+        <button class="scope-pill-btn active" data-scope="india" onclick="setGeographicScope('india')">🇮🇳 India</button>
+        <button class="scope-pill-btn" data-scope="delhi" onclick="setGeographicScope('delhi')">Delhi NCR</button>
+        <button class="scope-pill-btn" data-scope="mumbai" onclick="setGeographicScope('mumbai')">Mumbai</button>
+        <button class="scope-pill-btn" data-scope="bengaluru" onclick="setGeographicScope('bengaluru')">Bengaluru</button>
+        <button class="scope-pill-btn" data-scope="kolkata" onclick="setGeographicScope('kolkata')">Kolkata</button>
+        <button class="scope-pill-btn" data-scope="chennai" onclick="setGeographicScope('chennai')">Chennai</button>
+        <button class="scope-pill-btn" data-scope="hyderabad" onclick="setGeographicScope('hyderabad')">Hyderabad</button>
+        <button class="scope-pill-btn" data-scope="guwahati" onclick="setGeographicScope('guwahati')">Guwahati</button>
+        <button class="scope-pill-btn" data-scope="london" onclick="setGeographicScope('london')">🇬🇧 London</button>
+        <button class="scope-pill-btn" data-scope="newyork" onclick="setGeographicScope('newyork')">🇺🇸 New York</button>
+        <button class="scope-pill-btn" data-scope="toronto" onclick="setGeographicScope('toronto')">🇨🇦 Toronto</button>
+        <button class="scope-pill-btn" data-scope="dubai" onclick="setGeographicScope('dubai')">🇦🇪 Dubai</button>
+        <button class="scope-pill-btn" data-scope="singapore" onclick="setGeographicScope('singapore')">🇸🇬 Singapore</button>
+        <button class="scope-pill-btn" data-scope="tokyo" onclick="setGeographicScope('tokyo')">🇯🇵 Tokyo</button>
+        <button class="scope-pill-btn" data-scope="sydney" onclick="setGeographicScope('sydney')">🇦🇺 Sydney</button>
+        <button class="scope-pill-btn" data-scope="paris" onclick="setGeographicScope('paris')">🇫🇷 Paris</button>
+      </div>
+    </div>
+    <div class="geo-breadcrumb">
+      <span class="geo-breadcrumb-icon">📍</span>
+      <span id="geoBreadcrumbText">Global > India > National Grid</span>
+      <span class="geo-scope-badge" id="geoScopeBadge">🇮🇳 India National</span>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       VIEW 1: LIVE OPS CENTER (MAPLIBRE GL MAP & TELEMETRY)
+       ========================================================== -->
+  <div class="portal-view active" id="view-ops" role="tabpanel" aria-labelledby="btn-portal-ops" data-mobile-tab="map">
+
+    <!-- Mobile Navigation Tab Bar (Visible on mobile screens <= 768px) -->
+    <div class="mobile-ops-nav" id="mobileOpsNav" role="tablist" aria-label="Mobile Ops Sections">
+      <button class="mobile-ops-tab active" id="tabBtnMap" role="tab" aria-selected="true" onclick="switchMobileOpsTab('map')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+        <span>Live Map</span>
+      </button>
+      <button class="mobile-ops-tab" id="tabBtnQueue" role="tab" aria-selected="false" onclick="switchMobileOpsTab('queue')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        <span>Urgent Queue</span>
+        <span class="mobile-tab-badge">3</span>
+      </button>
+      <button class="mobile-ops-tab" id="tabBtnStock" role="tab" aria-selected="false" onclick="switchMobileOpsTab('stock')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        <span>Blood Stock</span>
+      </button>
+    </div>
+
+    <!-- Left Sidebar: Operations & Emergency Requests -->
+    <aside class="sidebar-left">
+      <div class="urgent-panel">
+        <div class="section-header">
+          <h3><span class="status-dot-pulse" style="background-color: var(--color-danger);"></span> Emergency Queue</h3>
+          <span class="section-header-badge danger" id="emergencyCountBadge">Live Sync</span>
+        </div>
+
+        <!-- Facility Type Filter Pills -->
+        <div class="filter-pills-row" role="group" aria-label="Facility Type Filters">
+          <button class="filter-type-pill active" data-type="all" onclick="setFacilityTypeFilter('all')">All</button>
+          <button class="filter-type-pill" data-type="hospital" onclick="setFacilityTypeFilter('hospital')">Hospitals</button>
+          <button class="filter-type-pill" data-type="blood_bank" onclick="setFacilityTypeFilter('blood_bank')">Blood Banks</button>
+          <button class="filter-type-pill" data-type="donation_center" onclick="setFacilityTypeFilter('donation_center')">Donation</button>
+        </div>
+
+        <!-- Blood Group Filter Chips -->
+        <div class="blood-chips-scroll" role="group" aria-label="Blood Group Filter">
+          <button class="filter-blood-pill active" data-blood="all" onclick="setBloodGroupFilter('all')">All</button>
+          <button class="filter-blood-pill" data-blood="O-" onclick="setBloodGroupFilter('O-')">O-</button>
+          <button class="filter-blood-pill" data-blood="O+" onclick="setBloodGroupFilter('O+')">O+</button>
+          <button class="filter-blood-pill" data-blood="A-" onclick="setBloodGroupFilter('A-')">A-</button>
+          <button class="filter-blood-pill" data-blood="A+" onclick="setBloodGroupFilter('A+')">A+</button>
+          <button class="filter-blood-pill" data-blood="B-" onclick="setBloodGroupFilter('B-')">B-</button>
+          <button class="filter-blood-pill" data-blood="B+" onclick="setBloodGroupFilter('B+')">B+</button>
+          <button class="filter-blood-pill" data-blood="AB-" onclick="setBloodGroupFilter('AB-')">AB-</button>
+          <button class="filter-blood-pill" data-blood="AB+" onclick="setBloodGroupFilter('AB+')">AB+</button>
+        </div>
+
+        <!-- Dynamic Contextual Emergencies Container -->
+        <div id="contextualEmergenciesContainer" class="emergencies-scroll-list">
+          <!-- Populated dynamically by renderContextualEmergencies() -->
+        </div>
+      </div>
+
+      <!-- Live Chronological Dispatch Activity Feed (Replaces Decorative Waveform) -->
+      <div class="activity-feed-panel">
+        <div class="activity-feed-header">
+          <span class="activity-feed-title">Dispatch Activity Feed</span>
+          <span class="activity-feed-stat" id="matchAccuracy">98.2% Sync</span>
+        </div>
+        <div class="terminal-feed" id="terminalFeed">
+          <div class="feed-line highlight">[16:42:01] Vector routing engine synchronized across 4 hospital nodes</div>
+          <div class="feed-line alert">[16:42:18] GMCH Trauma ICU issued critical allocation priority for O-</div>
+          <div class="feed-line">[16:42:35] Autonomous cold-chain telemetry confirmed within nominal range (3.8°C)</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Viewport: MAPLIBRE GL JS MAP (with 3D Mode Toggle) -->
+    <main class="viewport-container" id="viewport">
+      
+      <!-- Floating Map Top Control Bar: Basemap switcher + Facility View Filter + Blood Bank Locator -->
+      <div class="map-top-bar" role="toolbar" aria-label="Map Controls and Facility Filters">
+        <div class="map-mode-selector" role="group" aria-label="Cartographic Layer Switcher">
+          <button class="map-mode-btn" id="btnModeSatellite" onclick="setMapType('satellite')" title="Switch to High-Resolution Satellite & Aerial Imagery">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            <span>SATELLITE</span>
+          </button>
+          <button class="map-mode-btn active" id="btnModeStreets" onclick="setMapType('streets')" title="Switch to OpenStreetMap Vector Street Basemap">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+            <span>STREETS</span>
+          </button>
+        </div>
+
+        <div class="map-facility-selector" role="group" aria-label="Facility View Filter">
+          <button class="map-facility-btn active" data-type="all" id="btnMapFilterAll" onclick="setFacilityTypeFilter('all')" title="Show All Facilities">
+            <span>ALL</span>
+          </button>
+          <button class="map-facility-btn bloodbank-filter-btn" data-type="blood_bank" id="btnMapFilterBloodBank" onclick="setFacilityTypeFilter('blood_bank')" title="Highlight & Filter Blood Banks">
+            <span class="blood-icon">🩸</span>
+            <span>BLOOD BANKS</span>
+          </button>
+          <button class="map-facility-btn" data-type="hospital" id="btnMapFilterHospital" onclick="setFacilityTypeFilter('hospital')" title="Show Hospitals Only">
+            <span class="hosp-icon">🏥</span>
+            <span>HOSPITALS</span>
+          </button>
+        </div>
+
+        <button class="map-quick-action-btn locate-bloodbank-btn" id="btnLocateNearestBloodBank" onclick="locateNearestBloodBank()" title="Locate and focus the nearest regional Blood Bank">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="margin-right: 4px;" aria-hidden="true">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+          <span>LOCATE BLOOD BANK</span>
+        </button>
+      </div>
+
+      <!-- Advanced Map Navigation & Utility Stack (Bottom-Right) -->
+      <div class="map-nav-stack" role="group" aria-label="Map Navigation Stack">
+        <!-- Fullscreen Toggle -->
+        <button class="map-nav-btn" id="btnToggleFullscreen" onclick="handleToggleFullscreen()" aria-label="Toggle Fullscreen Map View" title="Toggle Fullscreen">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" id="fullscreenIcon">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+        </button>
+
+        <!-- Fit Visible Facilities -->
+        <button class="map-nav-btn" id="btnFitBounds" onclick="fitBoundsToVisibleFacilities()" aria-label="Fit All Active Facilities in View" title="Fit All Facilities in View">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+        </button>
+
+        <!-- Locate Me (Geolocation) -->
+        <button class="map-nav-btn" id="btnLocateUser" onclick="handleLocateUser()" aria-label="Locate My Position" title="Locate My Current Position">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" id="locateUserIcon">
+            <circle cx="12" cy="12" r="7"></circle>
+            <polyline points="12 2 12 5"></polyline>
+            <polyline points="12 19 12 22"></polyline>
+            <polyline points="2 12 5 12"></polyline>
+            <polyline points="19 12 22 12"></polyline>
+            <circle cx="12" cy="12" r="2" fill="currentColor"></circle>
+          </svg>
+        </button>
+
+        <!-- Reset Compass / Bearing -->
+        <button class="map-nav-btn gmap-compass-btn" id="btnResetBearing" onclick="handleResetBearing()" aria-label="Reset Map Orientation to North" title="Reset Orientation to North">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" id="compassIcon">
+            <polygon points="12 2 19 21 12 17 5 21 12 2" fill="currentColor"></polygon>
+          </svg>
+        </button>
+
+        <!-- Google Maps Style Clamped Zoom Controls -->
+        <div class="gmap-zoom-controls" role="group" aria-label="Map Zoom Controls">
+          <button class="gmap-zoom-btn" id="btnZoomIn" onclick="handleMapZoomIn()" aria-label="Zoom In" title="Zoom In">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <div class="gmap-zoom-divider"></div>
+          <button class="gmap-zoom-btn" id="btnZoomOut" onclick="handleMapZoomOut()" aria-label="Zoom Out" title="Zoom Out">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Map Loading Indicator (Discreet & Non-Intrusive) -->
+      <div class="map-loading-indicator" id="mapLoadingIndicator" aria-live="polite" aria-hidden="true">
+        <div class="map-spinner"></div>
+        <span id="mapLoadingText">Synchronizing Cartographic Tiles...</span>
+      </div>
+
+      <!-- Map Provider Error / Offline Fallback Banner -->
+      <div class="map-error-banner" id="mapErrorBanner" role="alert" style="display: none;">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span class="map-error-text" id="mapErrorText">Satellite feed latency detected. Switched to OpenStreetMap stream.</span>
+        <button class="map-error-btn" onclick="retryMapBasemap()">Reload Basemap</button>
+        <button class="map-error-close" onclick="dismissMapError()" aria-label="Dismiss error">&times;</button>
+      </div>
+
+      <!-- MapLibre GL Map Element -->
+      <div id="maplibreMap" role="region" aria-label="Interactive Global Blood Network Map" tabindex="0"></div>
+
+      <!-- Mobile Facility Detail Bottom Sheet (Touch-Friendly Responsive Panel) -->
+      <div class="mobile-facility-sheet" id="mobileFacilitySheet" aria-hidden="true">
+        <div class="sheet-drag-handle" onclick="hideMobileFacilitySheet()" role="button" aria-label="Close bottom sheet" tabindex="0"></div>
+        <div class="sheet-content" id="mobileFacilitySheetContent">
+          <!-- Populated dynamically on facility selection on mobile -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Sidebar: Regional Stock Matrix & Hospital Readiness -->
+    <aside class="sidebar-right">
+      <div class="section-header">
+        <h3><span class="status-dot-pulse"></span> <span id="stockMatrixScopeTitle">Regional Blood Reserves</span></h3>
+        <span class="section-header-badge info" id="totalUnitsLabel">1,280 Units</span>
+      </div>
+
+      <!-- Component A: Regional Blood Reserves Matrix -->
+      <div class="stock-matrix-panel">
+        <table class="stock-table">
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Reserves</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody">
+            <tr>
+              <td class="stock-group-cell">O- Negative</td>
+              <td class="stock-units-cell" style="color: #fb7185;">18 Units</td>
+              <td><span class="blood-badge critical">Critical Deficit</span></td>
+            </tr>
+            <tr>
+              <td class="stock-group-cell">O+ Positive</td>
+              <td class="stock-units-cell" style="color: #34d399;">86 Units</td>
+              <td><span class="blood-badge ready">Optimal</span></td>
+            </tr>
+            <tr>
+              <td class="stock-group-cell">A+ Positive</td>
+              <td class="stock-units-cell" style="color: #60a5fa;">64 Units</td>
+              <td><span class="blood-badge needed">Ready</span></td>
+            </tr>
+            <tr>
+              <td class="stock-group-cell">A- Negative</td>
+              <td class="stock-units-cell">24 Units</td>
+              <td><span class="blood-badge urgent">Moderate</span></td>
+            </tr>
+            <tr>
+              <td class="stock-group-cell">B+ Positive</td>
+              <td class="stock-units-cell">38 Units</td>
+              <td><span class="blood-badge urgent">Moderate</span></td>
+            </tr>
+            <tr>
+              <td class="stock-group-cell">B- Negative</td>
+              <td class="stock-units-cell" style="color: #fb7185;">14 Units</td>
+              <td><span class="blood-badge critical">Low</span></td>
+            </tr>
+            <tr>
+              <td class="stock-group-cell">AB+ Positive</td>
+              <td class="stock-units-cell" style="color: #34d399;">42 Units</td>
+              <td><span class="blood-badge ready">Optimal</span></td>
+            </tr>
+            <tr>
+              <td class="stock-group-cell">AB- Negative</td>
+              <td class="stock-units-cell" style="color: #fb7185;">9 Units</td>
+              <td><span class="blood-badge critical">Critical Deficit</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Component B: Hospital Facility Readiness Overview -->
+      <div class="section-header" style="border-top: 1px solid var(--border-subtle); margin-top: auto;">
+        <h3>Facility Directory</h3>
+        <span class="section-header-badge info" id="facilityCountBadge">Verified Nodes</span>
+      </div>
+
+      <div class="facility-list" id="facilityDirectoryList">
+        <!-- Populated dynamically by renderFacilityDirectoryList() -->
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ==========================================================
+       VIEW 2: PLATFORM OWNER ADMIN CONSOLE (NO PERSONAL HEALTH INFO)
+       ========================================================== -->
+  <div class="portal-view" id="view-admin">
+    <div class="admin-container portal-scroll">
+      
+      <!-- Platform Owner Header Banner -->
+      <div class="owner-banner">
+        <div class="owner-info">
+          <div class="owner-title">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--color-primary);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>Platform Owner Command Console</span>
+            <span class="owner-badge">Super Admin</span>
+          </div>
+          <div class="owner-subtitle">
+            Authenticated as <strong>Dhritishman Das</strong> (System Architect & Platform Owner) • Full Administrative Privileges
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 0.72rem; color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <span class="status-dot-pulse" style="background: #10b981; width: 6px; height: 6px;"></span>
+            All 4 Hospital Nodes Online
+          </span>
+          <button class="dispatch-btn" onclick="adminLogout()" style="background: rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.4); color: #f43f5e;">
+            Logout Owner
+          </button>
+        </div>
+      </div>
+
+      <!-- Executive KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Registered Citizens</div>
+          <div class="kpi-value" id="kpiDonorsCount">1,284</div>
+          <div class="kpi-sub">Across 8 Guwahati Urban Zones</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Verified Medical Centres</div>
+          <div class="kpi-value">14</div>
+          <div class="kpi-sub">GMCH, GNRC, BBCI, Nemcare</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active Transports</div>
+          <div class="kpi-value">4 Units</div>
+          <div class="kpi-sub">3 Ambulances • 1 Drone Brahmaputra</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Network Reliability</div>
+          <div class="kpi-value" style="color: var(--color-primary);">99.98%</div>
+          <div class="kpi-sub">Zero Dispatch Failures</div>
+        </div>
+      </div>
+
+      <!-- Main Management Grid -->
+      <div class="admin-grid-2col">
+        
+        <!-- Left: Inventory & Broadcast -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          
+          <!-- Hospital Blood Bank Inventory Matrix -->
+          <div class="admin-section">
+            <div class="admin-title-row">
+              <div class="admin-title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: #f43f5e;"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                <span>Regional Blood Bank Inventory Oversight</span>
+              </div>
+              <button class="dispatch-btn" onclick="restockAll()">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                Restock Baseline
+              </button>
+            </div>
+            <div class="inventory-grid" id="inventoryGrid"></div>
+          </div>
+
+          <!-- Emergency Broadcast Studio -->
+          <div class="admin-section">
+            <div class="admin-title-row">
+              <div class="admin-title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--color-primary);"><circle cx="12" cy="12" r="2"></circle><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path></svg>
+                <span>Issue Platform-Wide Emergency Broadcast</span>
+              </div>
+              <span class="beacon-dot"></span>
+            </div>
+            <form class="sos-form" onsubmit="event.preventDefault(); adminBroadcastSos();">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Target Medical Centre</label>
+                  <select class="form-select" id="sosHospitalSelect">
+                    <option value="GMCH Apex Emergency & Trauma">GMCH Apex Emergency & Trauma (Bhangagarh)</option>
+                    <option value="GNRC Hospitals Dispur">GNRC Hospitals Dispur</option>
+                    <option value="Dr. B. Borooah Cancer Institute (BBCI)">Dr. B. Borooah Cancer Institute (BBCI)</option>
+                    <option value="Nemcare Super Speciality Hospital">Nemcare Super Speciality Hospital (GS Road)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Required Blood Group</label>
+                  <select class="form-select" id="sosBloodGroupSelect">
+                    <option value="O-">O- Negative (Universal Critical)</option>
+                    <option value="O+">O+ Positive</option>
+                    <option value="A+">A+ Positive</option>
+                    <option value="A-">A- Negative</option>
+                    <option value="B+">B+ Positive</option>
+                    <option value="B-">B- Negative</option>
+                    <option value="AB+">AB+ Positive</option>
+                    <option value="AB-">AB- Negative</option>
+                  </select>
+                </div>
+                <div class="form-group" style="max-width: 100px;">
+                  <label class="form-label">Units Needed</label>
+                  <input type="number" class="form-input" id="sosUnitsInput" min="1" max="25" value="4" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Emergency Broadcast Protocol Note</label>
+                <input type="text" class="form-input" id="sosNotes" value="Mass casualty trauma replenishment priority — alert all sector couriers" required>
+              </div>
+              <button type="submit" class="btn-sos" style="justify-content: center; padding: 0.75rem; font-size: 0.85rem;">
+                <span class="beacon-dot"></span>
+                <span>Authorize Regional Red Alert Broadcast</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right: Donor Directory & Fleet Logistics -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          
+          <!-- Registered Donors Directory (Admin Audit Table with Delete Authority) -->
+          <div class="admin-section">
+            <div class="admin-title-row">
+              <div class="admin-title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--color-primary);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span>Registered Citizen Donor Directory</span>
+              </div>
+              <span class="audit-badge-privilege">🛡️ Admin Erasure Rights Active</span>
+            </div>
+
+            <div class="audit-toolbar">
+              <input type="text" class="audit-search-input" id="adminUserSearchInput" placeholder="🔍 Search citizen by name, blood type, or sector..." oninput="filterAdminDonors()">
+              <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;" id="adminAuditCountBadge">Loading directory...</span>
+            </div>
+
+            <div style="overflow-x: auto; max-height: 290px;" class="portal-scroll">
+              <table class="donors-table">
+                <thead>
+                  <tr>
+                    <th>Donor Name & ID</th>
+                    <th>Blood</th>
+                    <th>Sector Location</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Admin Action</th>
+                  </tr>
+                </thead>
+                <tbody id="donorsAuditTableBody">
+                  <!-- Populated dynamically via renderDonorsAuditTable() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Transport & Drone Fleet -->
+          <div class="admin-section">
+            <div class="admin-title-row">
+              <div class="admin-title">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--color-primary);"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
+                <span>Fleet & Drone Cold-Chain Logistics</span>
+              </div>
+              <span style="font-size: 0.7rem; color: var(--color-primary); font-weight: 700;">GPS ACTIVE</span>
+            </div>
+            <table class="fleet-table">
+              <thead>
+                <tr><th>Unit</th><th>Type</th><th>Status</th><th>Cold Temp</th><th>Battery</th></tr>
+              </thead>
+              <tbody>
+                <tr><td style="color:#fff;font-weight:700;">Ambulance 4A</td><td>EV Courier</td><td><span class="status-badge enroute">En-Route GMCH</span></td><td style="color:var(--color-primary);">3.8°C</td><td>88%</td></tr>
+                <tr><td style="color:#fff;font-weight:700;">Unit 2B</td><td>Rapid Van</td><td><span class="status-badge standby">Standby Dispur</span></td><td style="color:var(--color-primary);">4.1°C</td><td>95%</td></tr>
+                <tr><td style="color:#fff;font-weight:700;">Drone Brahmaputra-1</td><td>Autonomous UAV</td><td><span class="status-badge enroute">Air Transit</span></td><td style="color:var(--color-primary);">3.9°C</td><td>79%</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       VIEW 3: DONOR / USER HUB (CITIZEN DONOR WITH PERSONAL BLOOD INFO)
+       ========================================================== -->
+  <div class="portal-view" id="view-donor">
+    
+    <!-- SUBVIEW A: CITIZEN AUTH GATE (WHEN NOT LOGGED IN) -->
+    <div class="donor-gate-wrapper portal-scroll" id="donorGateView">
+      <div class="donor-gate-card">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div class="logo-container" style="width: 52px; height: 52px; margin: 0 auto 0.5rem auto;">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" style="color: #f43f5e;" aria-hidden="true">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+          </div>
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.02em;">Citizen & Donor Hub</h2>
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+            Personalized Blood Discovery, Emergency Requests & Confidential Donor Credentialing
+          </p>
+        </div>
+
+        <!-- Privacy Shield Banner (Zero Data Leakage Guarantee) -->
+        <div class="privacy-shield-banner">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="color: #10b981; flex-shrink: 0;" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <div>
+            <strong style="color: #fff;">Zero Data Leakage Guarantee:</strong>
+            Your mobile number, email, and medical records are encrypted on-device. The public network and dispatch couriers only interact with anonymous tokens (<code style="color: var(--color-primary); font-family: var(--font-mono);">#ZK-ASM-XXX</code>). No user data is ever leaked.
+          </div>
+        </div>
+
+        <!-- Auth Tabs -->
+        <div class="auth-tabs" style="justify-content: center;">
+          <button class="auth-tab-btn active" id="btnGateTabRegister" onclick="switchGateTab('register')">Register New Citizen</button>
+          <button class="auth-tab-btn" id="btnGateTabLogin" onclick="switchGateTab('login')">Citizen Sign In</button>
+        </div>
+
+        <!-- Register Form -->
+        <form id="gateRegisterForm" onsubmit="event.preventDefault(); submitGateRegister();" style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="gateRegName" placeholder="e.g. Kabir Mehta / Pooja Sharma" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Blood Group</label>
+              <select class="form-select" id="gateRegBlood" required>
+                <option value="O-">O- (Universal Critical Donor)</option>
+                <option value="O+">O+ Positive</option>
+                <option value="A+">A+ Positive</option>
+                <option value="A-">A- Negative</option>
+                <option value="B+">B+ Positive</option>
+                <option value="B-">B- Negative</option>
+                <option value="AB+">AB+ Positive</option>
+                <option value="AB-">AB- (Universal Recipient)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Guwahati Zone / Sector</label>
+              <select class="form-select" id="gateRegSector">
+                <option value="Bhangagarh, Guwahati">Bhangagarh (GMCH Zone)</option>
+                <option value="Paltan Bazaar, Central Guwahati">Paltan Bazaar (Central Guwahati)</option>
+                <option value="Dispur / Six Mile, Guwahati">Dispur / Six Mile (Capital Complex)</option>
+                <option value="Chandmari, Guwahati">Chandmari (Silpukhuri Zone)</option>
+                <option value="Gopinath Nagar, Guwahati">Gopinath Nagar (BBCI Zone)</option>
+                <option value="Jalukbari, Guwahati">Jalukbari (West Guwahati / Gauhati Univ)</option>
+                <option value="Khanapara, East Guwahati">Khanapara (East Guwahati)</option>
+                <option value="Panbazar, Guwahati">Panbazar (Riverside District)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Mobile Number (Strictly Confidential)</label>
+              <input type="tel" class="form-input" id="gateRegPhone" placeholder="+91 98765 43210" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Security Password</label>
+              <input type="password" class="form-input" id="gateRegPass" placeholder="Choose a password" required>
+            </div>
+          </div>
+
+          <div style="font-size: 0.68rem; color: var(--text-muted); display: flex; align-items: flex-start; gap: 0.4rem; line-height: 1.3;">
+            <input type="checkbox" id="gateRegAgree" checked required style="margin-top: 2px;">
+            <label for="gateRegAgree">I consent to emergency blood matching under the Zero Data Leakage Privacy protocol (Data encrypted, no external tracking).</label>
+          </div>
+
+          <button type="submit" class="btn-sos" style="justify-content: center; padding: 0.8rem; font-size: 0.85rem; margin-top: 0.4rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>Create Encrypted Profile & Enter Hub</span>
+          </button>
+        </form>
+
+        <!-- Sign In Form -->
+        <form id="gateLoginForm" onsubmit="event.preventDefault(); submitGateLogin();" style="display: none; flex-direction: column; gap: 0.85rem;">
+          <div class="form-group">
+            <label class="form-label">Registered Mobile or Email</label>
+            <input type="text" class="form-input" id="gateLoginUser" placeholder="Enter mobile or email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="gateLoginPass" placeholder="Enter password" required>
+          </div>
+          <button type="submit" class="btn-sos" style="justify-content: center; padding: 0.8rem; font-size: 0.85rem; margin-top: 0.4rem;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span>Sign In to My Donor Hub</span>
+          </button>
+
+          <!-- Quick Test Presets (Testing Profiles) -->
+          <div style="margin-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.85rem;">
+            <div style="font-size: 0.68rem; color: var(--text-muted); margin-bottom: 0.5rem;">Quick Test Profiles (Zero-Knowledge Demo Accounts):</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button type="button" class="btn-quick-fill" onclick="quickFillCitizen('Rajesh Sharma', 'O-', 'Connaught Place, Central Delhi', 'delhi')">⚡ Rajesh (O- Delhi)</button>
+              <button type="button" class="btn-quick-fill" onclick="quickFillCitizen('Priya Iyer', 'A+', 'Parel / Dadar, Mumbai', 'mumbai')">⚡ Priya (A+ Mumbai)</button>
+              <button type="button" class="btn-quick-fill" onclick="quickFillCitizen('Arthur Davies', 'O-', 'Westminster, Central London', 'london')">⚡ Arthur (O- London)</button>
+              <button type="button" class="btn-quick-fill" onclick="quickFillCitizen('Jiten Barman', 'B+', 'Paltan Bazaar, Guwahati', 'guwahati')">⚡ Jiten (B+ Guwahati)</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SUBVIEW B: CITIZEN DASHBOARD (WHEN LOGGED IN) -->
+    <div class="donor-container portal-scroll" id="donorDashboardView" style="display: none;">
+      
+      <!-- Dashboard Top Header Bar -->
+      <div class="donor-dash-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div class="user-avatar" style="width: 36px; height: 36px; font-size: 0.85rem;">👤</div>
+          <div>
+            <div style="font-size: 0.85rem; font-weight: 800; color: #fff;">
+              Authenticated Citizen: <span id="authCitizenName" style="color: var(--color-primary);">--</span> (<span id="authCitizenBlood" style="color: #f43f5e;">--</span>)
+            </div>
+            <div style="font-size: 0.68rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+              <span>Zero-Knowledge Token:</span>
+              <code id="authCitizenToken" style="color: #10b981; font-family: var(--font-mono);">#ZK-ASM-000</code>
+              <button onclick="copyCitizenToken()" class="btn-quick-fill" style="padding: 1px 6px; font-size: 0.6rem;" title="Copy Zero-Knowledge Token to Clipboard">Copy</button>
+              <span>• End-to-End Encrypted Session</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="dispatch-btn" style="background: rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.4); color: #f43f5e; padding: 0.4rem 0.85rem; font-size: 0.72rem;" onclick="citizenLogout()">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Logout Profile
+        </button>
+      </div>
+
+      <!-- Left Column: Holographic ID & Privacy Shield -->
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        
+        <!-- Official Digital Health Blood Donor Pass -->
+        <div class="donor-pass-card" onclick="copyCitizenToken()" title="Click to copy encrypted Zero-Knowledge Token ID" style="cursor: pointer;">
+          <div class="pass-header">
+            <div>
+              <div class="pass-council" id="donorCardCouncil">National Blood Transfusion Network</div>
+              <div class="pass-id" id="donorCardBadgeId">DONOR ID: #ZK-NET-000</div>
+            </div>
+            <div class="pass-blood-seal">
+              <span class="pass-blood-val" id="donorCardBlood">--</span>
+              <span class="pass-blood-rh" id="donorCardBloodTypeLabel">Verified</span>
+            </div>
+          </div>
+          <div>
+            <div class="pass-holder-name" id="donorCardName">--</div>
+            <div class="pass-holder-sector" id="donorCardTier">Verified Citizen • National Network</div>
+          </div>
+          <div class="pass-status-pill">
+            <span class="status-dot-pulse"></span>
+            <span>Eligible for Emergency Allocation</span>
+          </div>
+          <div class="pass-metrics-grid">
+            <div class="pass-metric-item">
+              <span class="pass-metric-val" id="donorDonationsCount">0</span>
+              <span class="pass-metric-lbl">Donations</span>
+            </div>
+            <div class="pass-metric-item">
+              <span class="pass-metric-val" id="donorLivesSaved">0</span>
+              <span class="pass-metric-lbl">Lives Impacted</span>
+            </div>
+            <div class="pass-metric-item">
+              <span class="pass-metric-val" id="donorXpScore">Tier 1</span>
+              <span class="pass-metric-lbl">Recognition</span>
+            </div>
+          </div>
+          <div style="font-size: 0.62rem; color: var(--text-dim); text-align: center; border-top: 1px dashed var(--border-subtle); padding-top: 0.5rem;">
+            Click pass to copy cryptographically verified Token ID
+          </div>
+        </div>
+
+        <!-- Privacy Shield & Self-Service Erasure -->
+        <!-- Privacy Shield & Self-Service Erasure -->
+        <div class="privacy-shield-box">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <strong style="color: #10b981; font-size: 0.78rem; display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              Zero Data Leakage Shield
+            </strong>
+            <span style="font-size: 0.65rem; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 6px; border-radius: 4px; font-weight: 700;">ACTIVE</span>
+          </div>
+          <p style="margin: 0; line-height: 1.4;">
+            Your personal phone number, real identity, and medical status are cryptographically tokenized. Couriers, hospitals, and public maps only see your station token.
+          </p>
+          <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.6rem; margin-top: 0.2rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-muted); font-size: 0.68rem;">Right to Erasure:</span>
+            <button class="btn-delete-user" onclick="selfDeleteCitizenData()">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Delete My Profile & Purge Data
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Smart AI Recommendations, Blood Search, and Appointment Booking -->
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        
+        <!-- 1. Smart Automated Recommendation Engine -->
+        <div class="smart-recommendation-card" id="donorSmartRecommendationBox">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-primary);" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <strong style="font-size: 0.85rem; color: #fff; text-transform: uppercase; letter-spacing: 0.04em;">Smart Blood AI Recommendation</strong>
+            </div>
+            <span style="font-size: 0.68rem; color: var(--color-primary); font-weight: 800; background: rgba(14,165,233,0.12); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(14,165,233,0.25);">
+              REAL-TIME COMPATIBILITY MATCH
+            </span>
+          </div>
+          
+          <div id="smartRecommendationContent" style="margin: 0.5rem 0;">
+            <!-- Injected via updateSmartRecommendation() -->
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 0.75rem; flex-wrap: wrap;">
+            <button class="btn-donate-now" id="btnAcceptSmartMatch" onclick="acceptSmartRecommendation()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+              Accept Recommendation — Dispatch Courier
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Live Blood Discovery & Hospital Stock Search -->
+        <div class="admin-section">
+          <div class="admin-title-row">
+            <div class="admin-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-primary);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <span>Search Blood Recruitment & Hospital Stock</span>
+            </div>
+            <span style="font-size: 0.7rem; color: var(--color-primary); font-weight: 700;">VERIFIED TRANSFUSION DIRECTORY</span>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.5rem 0;">
+            Search verified reserves across certified hospitals for yourself, emergency surgeries, or family patients.
+          </p>
+
+          <!-- Search Toolbar -->
+          <div class="audit-toolbar" style="margin-bottom: 0.5rem;">
+            <input type="text" class="audit-search-input" id="bloodSearchInput" placeholder="Search medical facilities by name, city, or sector (e.g. AIIMS, London, Mumbai)..." oninput="filterHospitalStock()">
+          </div>
+
+          <!-- Blood Group Quick Filters -->
+          <div class="blood-filter-pills" id="bloodFilterPills">
+            <button class="blood-filter-btn active" onclick="setBloodFilter('ALL')">All Groups</button>
+            <button class="blood-filter-btn" onclick="setBloodFilter('O-')">O- (Universal)</button>
+            <button class="blood-filter-btn" onclick="setBloodFilter('O+')">O+</button>
+            <button class="blood-filter-btn" onclick="setBloodFilter('A+')">A+</button>
+            <button class="blood-filter-btn" onclick="setBloodFilter('A-')">A-</button>
+            <button class="blood-filter-btn" onclick="setBloodFilter('B+')">B+</button>
+            <button class="blood-filter-btn" onclick="setBloodFilter('B-')">B-</button>
+            <button class="blood-filter-btn" onclick="setBloodFilter('AB+')">AB+</button>
+            <button class="blood-filter-btn" onclick="setBloodFilter('AB-')">AB-</button>
+          </div>
+
+          <!-- Hospital Stock Search Results Grid -->
+          <div class="blood-search-grid" id="hospitalStockResultsGrid">
+            <!-- Dynamically populated via renderHospitalStockSearch() -->
+          </div>
+        </div>
+
+        <!-- 3. Appointment Scheduler -->
+        <div class="admin-section">
+          <div class="admin-title-row">
+            <div class="admin-title">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-accent);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>Schedule Blood Donation Appointment</span>
+            </div>
+            <span class="section-header-badge info">Official Certification</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Centre / Mobile Van</label>
+              <select class="form-select" id="schedFacility">
+                <option>AIIMS Regional Blood Bank (New Delhi)</option>
+                <option>KEM Hospital Blood Centre (Mumbai)</option>
+                <option>National Red Cross Society Blood Hub</option>
+                <option>GMCH Regional Blood Bank (Guwahati)</option>
+                <option>Royal London Hospital NHS Centre (London)</option>
+                <option>Mount Sinai Transfusion Center (New York)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <select class="form-select" id="schedDate">
+                <option>Tomorrow (Sep 10, 2026)</option>
+                <option>Friday (Sep 11, 2026)</option>
+                <option>Saturday (Sep 12, 2026)</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-donate-now" style="width: 100%; justify-content: center;" onclick="bookAppointment()">
+            Confirm Appointment Booking
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       MODAL 1: PLATFORM OWNER ADMIN LOGIN (NO BLOOD GROUP REQUIRED)
+       ========================================================== -->
+  <div class="modal-backdrop" id="adminAuthModal" role="dialog" aria-modal="true" aria-labelledby="adminAuthModalTitle" onclick="if(event.target === this) closeAdminAuthModal()">
+    <div class="auth-modal">
+      <div class="auth-modal-header">
+        <div class="auth-modal-title" id="adminAuthModalTitle">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-primary);" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>Platform Owner Login</span>
+        </div>
+        <button class="auth-close-btn" onclick="closeAdminAuthModal()" aria-label="Close Platform Owner login dialog">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="auth-security-pill">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="color: #f59e0b; flex-shrink: 0;" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span><strong>Restricted Super-Admin Access</strong> • Authorized Platform Owner credentials required.</span>
+      </div>
+
+      <form onsubmit="event.preventDefault(); submitAdminLogin();" style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <div class="form-group">
+          <label class="form-label" for="adminUserField">Owner Username</label>
+          <input type="text" class="form-input" id="adminUserField" placeholder="Enter owner username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="adminPassField">Security Password</label>
+          <input type="password" class="form-input" id="adminPassField" placeholder="Enter password" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-sos" style="justify-content: center; padding: 0.75rem; font-size: 0.85rem; margin-top: 0.5rem;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>Access Platform Owner Console</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       MODAL 2: CITIZEN DONOR REGISTRATION & LOGIN
+       ========================================================== -->
+  <div class="modal-backdrop" id="userAuthModal" role="dialog" aria-modal="true" aria-labelledby="userAuthModalTitle" onclick="if(event.target === this) closeUserAuthModal()">
+    <div class="auth-modal">
+      <div class="auth-modal-header">
+        <div class="auth-modal-title" id="userAuthModalTitle">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="color: #f43f5e;" aria-hidden="true"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+          <span>Citizen Donor Portal</span>
+        </div>
+        <button class="auth-close-btn" onclick="closeUserAuthModal()" aria-label="Close Citizen Donor Portal dialog">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabRegister" onclick="switchAuthTab('register')">Register New Donor</button>
+        <button class="auth-tab-btn" id="tabLogin" onclick="switchAuthTab('login')">Donor Login</button>
+      </div>
+
+      <!-- Citizen Registration -->
+      <form id="formRegister" onsubmit="event.preventDefault(); submitUserRegister();" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div class="form-group">
+          <label class="form-label" for="regName">Full Name</label>
+          <input type="text" class="form-input" id="regName" placeholder="e.g. Tanvi Kulkarni" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="regBlood">Blood Group</label>
+            <select class="form-select" id="regBlood" required>
+              <option value="O-">O- (Universal Critical)</option>
+              <option value="O+">O+ Positive</option>
+              <option value="A+">A+ Positive</option>
+              <option value="A-">A- Negative</option>
+              <option value="B+">B+ Positive</option>
+              <option value="B-">B- Negative</option>
+              <option value="AB+">AB+ Positive</option>
+              <option value="AB-">AB- (Rare)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="regPhone">Mobile Number</label>
+            <input type="tel" class="form-input" id="regPhone" placeholder="+91 98765 43210" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="regEmail">Email Address</label>
+          <input type="email" class="form-input" id="regEmail" placeholder="tanvi@vitallink.in" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="regPass">Password</label>
+          <input type="password" class="form-input" id="regPass" placeholder="Choose a secure password" required>
+        </div>
+        <button type="submit" class="btn-sos" style="justify-content: center; padding: 0.75rem; font-size: 0.85rem;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>Register as Certified Donor</span>
+        </button>
+      </form>
+
+      <!-- Citizen Login -->
+      <form id="formLogin" onsubmit="event.preventDefault(); submitUserLogin();" style="display: none; flex-direction: column; gap: 0.85rem;">
+        <div class="auth-helper-pill">
+          <span>Demo Citizen: <strong>Ananya Sen</strong> (A+)</span>
+          <button type="button" class="btn-quick-fill" onclick="quickFillDemoUser()">⚡ Fill Demo</button>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Email or Mobile</label>
+          <input type="text" class="form-input" id="loginEmail" placeholder="Enter registered email" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="loginPass">Password</label>
+          <input type="password" class="form-input" id="loginPass" placeholder="Enter password" required>
+        </div>
+        <button type="submit" class="btn-sos" style="justify-content: center; padding: 0.75rem; font-size: 0.85rem;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>Sign In to Donor Hub</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ==========================================================
+       MAPLIBRE GL API & CORE SYSTEM JAVASCRIPT
+       ========================================================== -->
+  <!-- Core System JavaScript Modules -->
+  <script src="js/state.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/donor.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
