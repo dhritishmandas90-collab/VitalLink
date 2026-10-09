@@ -1,0 +1,23 @@
+{
+  "name": "vitallink-global-network",
+  "version": "2.0.0",
+  "description": "VitalLink — Global Smart Blood Connection & Emergency Cartographic Dispatch Grid",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve -l 8080 .",
+    "check": "node --check js/state.js && node --check js/map.js && node --check js/app.js && node --check js/donor.js && node --check js/admin.js && node --check js/entry.js && node --check js/hospital.js",
+    "test": "node tests/test-lifecycle.js && node tests/test-repairs.js && node tests/test-regressions.js && node tests/test-entry-flow.js && node tests/test-qa-fixes.js"
+  },
+  "keywords": [
+    "blood-network",
+    "gis",
+    "maplibre",
+    "emergency-dispatch",
+    "healthcare",
+    "zero-knowledge",
+    "telemetry"
+  ],
+  "author": "VitalLink Engineering Team",
+  "license": "UNLICENSED",
+  "private": true
+}
